@@ -62,3 +62,52 @@ resource "aws_iam_role_policy_attachment" "attach_ssm_s3" {
   policy_arn = aws_iam_policy.ssm_s3_access.arn
 }
 
+######github private key aws secret manager
+
+resource "aws_secretsmanager_secret" "my_github_ssh_key" {
+  name        = "my-github_ssh_private_keys6"
+  description = "SSH private key for accessing GitHub repositories"
+  
+}
+
+resource "aws_secretsmanager_secret_version" "my_github_ssh_key_version" {
+  secret_id     = aws_secretsmanager_secret.my_github_ssh_key.id
+  # secret_string = file("${path.module}/latest_github_key") # Path to your SSH private key file
+  secret_string =   local.github_ssh_private_key # This should point to the local variable defined in the githubkey module
+}
+
+
+# OPTION 1: Updated IAM policy that allows the EC2 role to access AND update the GitHub SSH key
+resource "aws_iam_policy" "github_ssh_key_policy" {
+  name        = "github-ssh-key-access-policy"
+  description = "Allow EC2 role to access and update GitHub SSH key from Secrets Manager"
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid = "AllowReadGitHubSSHKey",
+        Effect = "Allow",
+        Action = [
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:DescribeSecret"
+        ],
+        Resource = aws_secretsmanager_secret.my_github_ssh_key.arn
+      }
+      # {
+      #   Sid = "AllowUpdateGitHubSSHKey",
+      #   Effect = "Allow",
+      #   Action = [
+      #     "secretsmanager:UpdateSecret"
+      #   ],
+      #   Resource = aws_secretsmanager_secret.my_github_ssh_key.arn
+      # }
+    ]
+  })
+}
+
+####Attach the github policy to the role
+
+resource "aws_iam_role_policy_attachment" "github_key" {
+  role       = aws_iam_role.ssm_ec2_role.name
+  policy_arn = aws_iam_policy.github_ssh_key_policy.arn
+}

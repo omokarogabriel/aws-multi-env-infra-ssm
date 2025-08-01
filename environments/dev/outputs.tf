@@ -6,4 +6,8 @@ output "shared_ssm_bucket_name" {
   value = module.ssm.ssm_bucket_name
 }
 
+output "github_key" {
+  value = module.iam.github_key
+  
+}
 

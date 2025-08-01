@@ -11,6 +11,7 @@ module "iam" {
   source  = "../../modules/frontend/iam"
   project = var.project
   # Env = var.env
+  
 }
 
 module "networking" {
@@ -60,3 +61,8 @@ module "ssm" {
 
 # to access the private ec2 
 # aws ssm start-session --target <INSTANCE_ID>
+
+# module "githubkey" {
+#   source = "../../modules/frontend/"
+  
+# }
