@@ -251,7 +251,7 @@ jobs:
     env:
       AWS_REGION: us-east-1
       TF_IN_AUTOMATION: true
-      TF_PLUGIN_CACHE_DIR: ~/.terraform.d/plugin-cache
+      # TF_PLUGIN_CACHE_DIR: ~/.terraform.d/plugin-cache
       ENV_DIR: ${{ github.ref_name == 'main' && 'prod' || github.ref_name }}
 
     steps:
@@ -270,11 +270,11 @@ jobs:
         with:
           terraform_version: 1.8.5
 
-      - name: Cache Terraform plugins
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.TF_PLUGIN_CACHE_DIR }}
-          key: ${{ runner.os }}-terraform-${{ hashFiles('**/*.tf') }}
+      # - name: Cache Terraform plugins
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: ${{ env.TF_PLUGIN_CACHE_DIR }}
+      #     key: ${{ runner.os }}-terraform-${{ hashFiles('**/*.tf') }}
 
       - name: Terraform Init
         working-directory: environments/${{ env.ENV_DIR }}
