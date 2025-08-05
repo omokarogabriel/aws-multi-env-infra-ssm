@@ -11,3 +11,7 @@ output "github_key" {
   
 }
 
+# output "dynamotable" {
+#   value = module.dynamodb_table.dynamo_table_name
+# }
+

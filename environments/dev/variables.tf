@@ -52,3 +52,19 @@ variable "user_data_path" {
   description = "Path to the user data script"
   type        = string
 }
+
+# variable "dynamo_table_name" {
+#   description = "The name of the DynamoDB table for state locking"
+#   type        = string
+
+# }
+
+variable "asg_name" {
+  description = "The name prefix for the Auto Scaling Group"
+  type        = string
+}
+
+# variable "dynamodb_table_name" {
+#   description = "The name of the DynamoDB table"
+#   type        = string
+# }
