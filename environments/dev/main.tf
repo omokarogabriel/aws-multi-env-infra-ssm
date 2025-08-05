@@ -2,10 +2,15 @@ provider "aws" {
   region = var.aws_region
 }
 
-variable "asg_name" {
-  description = "The name prefix for the Auto Scaling Group"
-  type        = string
-}
+# variable "asg_name" {
+#   description = "The name prefix for the Auto Scaling Group"
+#   type        = string
+# }
+
+# variable "dynamodb_table_name" {
+#   description = "The name of the DynamoDB table"
+#   type        = string
+# }
 
 module "iam" {
   source  = "../../modules/frontend/iam"
@@ -58,6 +63,10 @@ module "autoscaling" {
 module "ssm" {
   source = "../../modules/frontend/ssmbucket"
 }
+
+# module "dynamodb_table" {
+#   source = "../../modules/frontend/dynamotable"
+# }
 
 # to access the private ec2 
 # aws ssm start-session --target <INSTANCE_ID>
