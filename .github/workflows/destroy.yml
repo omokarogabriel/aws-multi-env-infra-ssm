@@ -299,10 +299,13 @@ jobs:
       #     path: ${{ env.TF_PLUGIN_CACHE_DIR }}
       #     key: ${{ runner.os }}-terraform-${{ hashFiles('**/*.tf') }}
 
-      # - name: Write GitHub SSH key to file
-      #   run: |
-      #     echo "${{ secrets.GITHUB_SSH_PRIVATE_KEY }}" > modules/latest_github_key
-      #     chmod 600 modules/latest_github_key
+      # ✅ Create the SSH private key file for Terraform
+      - name: Write GitHub SSH key to file
+        run: |
+          mkdir -p modules/frontend
+          echo "${{ secrets.MY_GITHUB_SSH_PRIVATE_KEY }}" > modules/frontend/latest_github_key
+          chmod 600 modules/frontend/latest_github_key
+
 
       - name: Terraform Init
         working-directory: environments/${{ github.event.inputs.environment }}
