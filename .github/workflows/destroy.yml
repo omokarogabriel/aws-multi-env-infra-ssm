@@ -1,71 +1,286 @@
-name: Terraform Destroy
+# # name: Terraform Destroy
+
+# # # on:
+# # #   workflow_dispatch:
+# # #     inputs:
+# # #       environment:
+# # #         description: "Environment to destroy (dev/staging/prod)"
+# # #         required: true
+# # #         default: "dev"
+
+# # # This defines when the workflow will run.
+# # on:
+
+# # #This means the workflow can be manually triggered from the GitHub Actions tab.
+# # # It will not run automatically — you have to go into Actions → pick the workflow → click "Run workflow".
+# #   workflow_dispatch:
+
+# # # When you trigger it manually, GitHub can ask you for values.
+# # # Here, there’s one input:
+# #     inputs:
+
+# #       # The name of the input parameter.
+# #       environment:
+
+# #         # What you’ll see in the UI so you know what to type.
+# #         description: "Environment to deploy"
+
+# #         # You can’t run the workflow without giving a value.
+# #         required: true
+# #         type: choice
+
+# #         #  If you don’t change anything, it will assume dev.
+# #         default: dev
+# #         options:
+# #           - dev
+# #           - staging
+# #           - prod
+
+# # # This is where you define the tasks (jobs) that GitHub Actions will run.
+# # jobs:
+
+# #   # This is the job name. You can name it anything, but here it describes the purpose: destroy Terraform-managed infrastructure.
+# #   terraform-destroy:
+
+# #     # This tells GitHub Actions to run the job on a fresh Ubuntu Linux virtual machine.
+# #     runs-on: ubuntu-latest
+
+# #     # These are environment variables available to all steps in this job:
+# #     env:
+
+# #       # AWS region for all AWS CLI and Terraform commands.
+# #       AWS_REGION: us-east-1
+
+# #       # Tells Terraform it’s running in CI/CD mode (less interactive).
+# #       TF_IN_AUTOMATION: true
+
+# #     steps:
+
+# #       # This pulls your repository code into the GitHub Actions runner so Terraform files are available.
+# #       # Checkout repo
+# #       - name: Checkout
+# #         uses: actions/checkout@v4
+
+
+# #       # Uses GitHub Actions’ AWS credential helper.
+# #       # Reads your AWS credentials from GitHub Secrets (never hardcode keys).
+# #       # Sets the AWS region to us-east-1.
+# #       # Configure AWS credentials
+# #       - name: Configure AWS credentials
+# #         uses: aws-actions/configure-aws-credentials@v4
+# #         with:
+# #           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+# #           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+# #           aws-region: ${{ env.AWS_REGION }}
+
+
+# #       # Installs Terraform version 1.8.5 in the runner.
+# #       # Setup Terraform
+# #       - name: Setup Terraform
+# #         uses: hashicorp/setup-terraform@v3
+# #         with:
+# #           terraform_version: 1.8.5
+
+
+
+# #       # Runs terraform init in the selected environment folder (dev, staging, or prod).
+# #       # Uses the ${{ github.event.inputs.environment }} variable from the workflow trigger.
+# #       # -migrate-state moves state to the configured backend if needed (S3 + DynamoDB in your case).
+# #       # Terraform Init
+# #       - name: Terraform Init
+# #         working-directory: environments/${{ github.event.inputs.environment }}
+# #         run: terraform init -migrate-state
+
+
+# #       # Runs terraform destroy to delete all resources in that environment.
+# #       # -auto-approve skips the confirmation prompt (since this is CI/CD).
+# #       # Terraform Destroy
+# #       - name: Terraform Destroy
+# #         working-directory: environments/${{ github.event.inputs.environment }}
+# #         run: terraform destroy -auto-approve
+
+
+
+
+
+
+
+
+
+
+
+# name: Terraform Destroy
 
 # on:
 #   workflow_dispatch:
 #     inputs:
 #       environment:
-#         description: "Environment to destroy (dev/staging/prod)"
+#         description: "Environment to destroy (dev, staging, prod)"
 #         required: true
-#         default: "dev"
+#         type: choice
+#         default: dev
+#         options:
+#           - dev
+#           - staging
+#           - prod
+#       confirm_destroy:
+#         description: "Are you sure you want to destroy this environment?"
+#         required: true
+#         type: choice
+#         default: "no"
+#         options:
+#           - "yes"
+#           - "no"
 
-# This defines when the workflow will run.
+# jobs:
+#   terraform-destroy:
+#     runs-on: ubuntu-latest
+
+#     env:
+#       AWS_REGION: us-east-1
+#       TF_IN_AUTOMATION: true
+#       TF_PLUGIN_CACHE_DIR: ~/.terraform.d/plugin-cache
+
+#     steps:
+#       # Stop if confirmation is not 'yes'
+#       - name: Check destroy confirmation
+#         if: ${{ github.event.inputs.confirm_destroy != 'yes' }}
+#         run: |
+#           echo "❌ Destroy action not confirmed. Exiting."
+#           exit 1
+
+#       # Checkout repository
+#       - name: Checkout
+#         uses: actions/checkout@v4
+
+#       # Configure AWS credentials from GitHub Secrets
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v4
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: ${{ env.AWS_REGION }}
+
+#       # Setup Terraform
+#       - name: Setup Terraform
+#         uses: hashicorp/setup-terraform@v3
+#         with:
+#           terraform_version: 1.8.5
+
+#       # Cache Terraform plugins
+#       - name: Cache Terraform plugins
+#         uses: actions/cache@v4
+#         with:
+#           path: ${{ env.TF_PLUGIN_CACHE_DIR }}
+#           key: ${{ runner.os }}-terraform-${{ hashFiles('**/*.tf') }}
+
+#       # Initialize Terraform
+#       - name: Terraform Init
+#         working-directory: environments/${{ github.event.inputs.environment }}
+#         run: terraform init
+
+#       # Destroy Infrastructure
+#       - name: Terraform Destroy
+#         working-directory: environments/${{ github.event.inputs.environment }}
+#         run: terraform destroy -auto-approve
+
+
+
+######### NEW DESTROY 1
+
+# name: Terraform Destroy
+
+# on:
+#   workflow dispatch:
+
+# jobs:
+#   terraform-destroy:
+#     runs-on: ubuntu-latest
+
+#     env:
+#       AWS_REGION: us-east-1
+#       TF_IN_AUTOMATION: true
+#       # TF_PLUGIN_CACHE_DIR: ~/.terraform.d/plugin-cache
+
+#     steps:
+#       # Checkout repository
+#       - name: Checkout
+#         uses: actions/checkout@v4
+
+#       # Configure AWS credentials from GitHub Secrets
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v4
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: ${{ env.AWS_REGION }}
+
+#       # Setup Terraform
+#       - name: Setup Terraform
+#         uses: hashicorp/setup-terraform@v3
+#         with:
+#           terraform_version: 1.8.5
+
+#       # # Cache Terraform plugins
+#       # - name: Cache Terraform plugins
+#       #   uses: actions/cache@v4
+#       #   with:    
+
+#       # Terraform Init
+#       - name: Terraform Init
+#         working-directory: environments/${{ github.event.inputs.environment }}
+#         run: terraform init -migrate-state
+
+#       # Terraform Destroy
+#       - name: Terraform Destroy
+#         working-directory: environments/${{ github.event.inputs.environment }}  
+#         run: terraform destroy -auto-approve
+
+
+
+
+
+
+####### NEW DESTROY 2
+
+name: Terraform Destroy
+
 on:
-
-#This means the workflow can be manually triggered from the GitHub Actions tab.
-# It will not run automatically — you have to go into Actions → pick the workflow → click "Run workflow".
   workflow_dispatch:
-
-# When you trigger it manually, GitHub can ask you for values.
-# Here, there’s one input:
     inputs:
-
-      # The name of the input parameter.
       environment:
-
-        # What you’ll see in the UI so you know what to type.
-        description: "Environment to deploy"
-
-        # You can’t run the workflow without giving a value.
+        description: "Environment to destroy (dev, staging, prod)"
         required: true
         type: choice
-
-        #  If you don’t change anything, it will assume dev.
         default: dev
         options:
           - dev
           - staging
           - prod
+      confirm_destroy:
+        description: "Type YES to confirm destruction"
+        required: true
+        default: "NO"
 
-# This is where you define the tasks (jobs) that GitHub Actions will run.
 jobs:
-
-  # This is the job name. You can name it anything, but here it describes the purpose: destroy Terraform-managed infrastructure.
   terraform-destroy:
-
-    # This tells GitHub Actions to run the job on a fresh Ubuntu Linux virtual machine.
     runs-on: ubuntu-latest
 
-    # These are environment variables available to all steps in this job:
     env:
-
-      # AWS region for all AWS CLI and Terraform commands.
       AWS_REGION: us-east-1
-
-      # Tells Terraform it’s running in CI/CD mode (less interactive).
       TF_IN_AUTOMATION: true
+      # TF_PLUGIN_CACHE_DIR: ~/.terraform.d/plugin-cache
 
     steps:
+      - name: Check confirmation
+        if: ${{ github.event.inputs.confirm_destroy != 'YES' }}
+        run: |
+          echo "❌ Destroy not confirmed. Type YES to confirm."
+          exit 1
 
-      # This pulls your repository code into the GitHub Actions runner so Terraform files are available.
-      # Checkout repo
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-
-      # Uses GitHub Actions’ AWS credential helper.
-      # Reads your AWS credentials from GitHub Secrets (never hardcode keys).
-      # Sets the AWS region to us-east-1.
-      # Configure AWS credentials
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -73,28 +288,21 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-
-      # Installs Terraform version 1.8.5 in the runner.
-      # Setup Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.8.5
 
+      # - name: Cache Terraform plugins
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: ${{ env.TF_PLUGIN_CACHE_DIR }}
+      #     key: ${{ runner.os }}-terraform-${{ hashFiles('**/*.tf') }}
 
-
-      # Runs terraform init in the selected environment folder (dev, staging, or prod).
-      # Uses the ${{ github.event.inputs.environment }} variable from the workflow trigger.
-      # -migrate-state moves state to the configured backend if needed (S3 + DynamoDB in your case).
-      # Terraform Init
       - name: Terraform Init
         working-directory: environments/${{ github.event.inputs.environment }}
-        run: terraform init -migrate-state
+        run: terraform init
 
-
-      # Runs terraform destroy to delete all resources in that environment.
-      # -auto-approve skips the confirmation prompt (since this is CI/CD).
-      # Terraform Destroy
       - name: Terraform Destroy
         working-directory: environments/${{ github.event.inputs.environment }}
         run: terraform destroy -auto-approve

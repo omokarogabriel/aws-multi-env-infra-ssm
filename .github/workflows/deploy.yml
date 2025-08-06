@@ -1,18 +1,82 @@
-# name: Terraform
+
+# # name: Terraform
+
+# # # on:
+# # #   workflow_dispatch:
+# # #     inputs:
+# # #       environment:
+# # #         description: "Environment to deploy (dev/staging/prod)"
+# # #         required: true
+# # #         default: "dev"
 
 # # on:
 # #   workflow_dispatch:
 # #     inputs:
 # #       environment:
-# #         description: "Environment to deploy (dev/staging/prod)"
+# #         description: "Environment to deploy (dev,staging,prod)"
 # #         required: true
-# #         default: "dev"
+# #         type: choice
+# #         default: dev
+# #         options:
+# #           - dev
+# #           - staging
+# #           - prod
+
+
+# # jobs:
+# #   terraform:
+# #     runs-on: ubuntu-latest
+
+# #     env:
+# #       AWS_REGION: us-east-1
+# #       TF_IN_AUTOMATION: true
+
+# #     steps:
+# #       # Checkout repo
+# #       - name: Checkout
+# #         uses: actions/checkout@v4
+
+# #       # Configure AWS credentials (from GitHub Secrets)
+# #       - name: Configure AWS credentials
+# #         uses: aws-actions/configure-aws-credentials@v4
+# #         with:
+# #           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+# #           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+# #           aws-region: ${{ env.AWS_REGION }}
+
+# #       # Setup Terraform
+# #       - name: Setup Terraform
+# #         uses: hashicorp/setup-terraform@v3
+# #         with:
+# #           terraform_version: 1.8.5
+
+# #       # Init Terraform
+# #       - name: Terraform Init
+# #         working-directory: environments/${{ github.event.inputs.environment }}
+# #         run: terraform init -migrate-state
+
+# #       # Plan Terraform
+# #       - name: Terraform Plan
+# #         working-directory: environments/${{ github.event.inputs.environment }}
+# #         run: terraform plan
+
+# #       # Apply Terraform (only on manual approval)
+# #       - name: Terraform Apply
+# #         if: github.event_name == 'workflow_dispatch'
+# #         working-directory: environments/${{ github.event.inputs.environment }}
+# #         run: terraform apply -auto-approve
+
+
+
+
+
+# name: Terraform
 
 # on:
 #   workflow_dispatch:
 #     inputs:
 #       environment:
-#         description: "Environment to deploy (dev,staging.prod)"
+#         description: "Environment to deploy (dev, staging, prod)"
 #         required: true
 #         type: choice
 #         default: dev
@@ -20,7 +84,14 @@
 #           - dev
 #           - staging
 #           - prod
-
+#       auto_apply:
+#         description: "Apply changes?"
+#         required: true
+#         type: choice
+#         default: "false"
+#         options:
+#           - "true"
+#           - "false"
 
 # jobs:
 #   terraform:
@@ -29,13 +100,14 @@
 #     env:
 #       AWS_REGION: us-east-1
 #       TF_IN_AUTOMATION: true
+#       TF_PLUGIN_CACHE_DIR: ~/.terraform.d/plugin-cache
 
 #     steps:
-#       # Checkout repo
+#       # Checkout repository
 #       - name: Checkout
 #         uses: actions/checkout@v4
 
-#       # Configure AWS credentials (from GitHub Secrets)
+#       # Configure AWS credentials from GitHub Secrets
 #       - name: Configure AWS credentials
 #         uses: aws-actions/configure-aws-credentials@v4
 #         with:
@@ -49,75 +121,143 @@
 #         with:
 #           terraform_version: 1.8.5
 
-#       # Init Terraform
+#       # Cache Terraform plugins for faster runs
+#       - name: Cache Terraform plugins
+#         uses: actions/cache@v4
+#         with:
+#           path: ${{ env.TF_PLUGIN_CACHE_DIR }}
+#           key: ${{ runner.os }}-terraform-${{ hashFiles('**/*.tf') }}
+
+#       # Initialize Terraform
 #       - name: Terraform Init
 #         working-directory: environments/${{ github.event.inputs.environment }}
-#         run: terraform init -migrate-state
+#         run: terraform init
 
-#       # Plan Terraform
+#       # Terraform Plan
 #       - name: Terraform Plan
 #         working-directory: environments/${{ github.event.inputs.environment }}
 #         run: terraform plan
 
-#       # Apply Terraform (only on manual approval)
+#       # Terraform Apply (only if auto_apply is set to true)
 #       - name: Terraform Apply
-#         if: github.event_name == 'workflow_dispatch'
+#         if: ${{ github.event.inputs.auto_apply == 'true' }}
 #         working-directory: environments/${{ github.event.inputs.environment }}
 #         run: terraform apply -auto-approve
 
 
 
-name: Terraform
+
+
+
+
+# # name: Terraform
+
+# # on:
+# #   push:
+# #     paths:
+# #       - 'environments/dev/**'
+# #       - 'environments/staging/**'
+# #       - 'environments/prod/**'
+# #   workflow_dispatch:
+# #     inputs:
+# #       environment:
+# #         description: "Environment to deploy"
+# #         required: true
+# #         type: choice
+# #         default: dev
+# #         options:
+# #           - dev
+# #           - staging
+# #           - prod
+
+# # jobs:
+# #   terraform:
+# #     runs-on: ubuntu-latest
+
+# #     env:
+# #       AWS_REGION: us-east-1
+# #       TF_IN_AUTOMATION: true
+# #       ENV_NAME: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || (github.event_name == 'push' && github.ref_name == 'main' && github.event.head_commit.message) }}
+
+# #     steps:
+# #       # Detect environment for push events
+# #       - name: Detect environment from changed path
+# #         if: github.event_name == 'push'
+# #         id: detect_env
+# #         run: |
+# #           ENV_CHANGED=$(git diff --name-only HEAD~1 HEAD | grep -E '^environments/(dev|staging|prod)/' | head -n1 | cut -d'/' -f2)
+# #           echo "environment=$ENV_CHANGED" >> $GITHUB_ENV
+# #           echo "Detected environment: $ENV_CHANGED"
+
+# #       # Set environment variable for manual trigger
+# #       - name: Set environment from workflow_dispatch
+# #         if: github.event_name == 'workflow_dispatch'
+# #         run: |
+# #           echo "environment=${{ github.event.inputs.environment }}" >> $GITHUB_ENV
+# #           echo "Selected environment: ${{ github.event.inputs.environment }}"
+
+# #       # Checkout repo
+# #       - name: Checkout
+# #         uses: actions/checkout@v4
+
+# #       # Configure AWS credentials (from GitHub Secrets)
+# #       - name: Configure AWS credentials
+# #         uses: aws-actions/configure-aws-credentials@v4
+# #         with:
+# #           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+# #           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+# #           aws-region: ${{ env.AWS_REGION }}
+
+# #       # Setup Terraform
+# #       - name: Setup Terraform
+# #         uses: hashicorp/setup-terraform@v3
+# #         with:
+# #           terraform_version: 1.8.5
+
+# #       # Init Terraform
+# #       - name: Terraform Init
+# #         working-directory: environments/${{ env.environment }}
+# #         run: terraform init -migrate-state
+
+# #       # Plan Terraform
+# #       - name: Terraform Plan
+# #         working-directory: environments/${{ env.environment }}
+# #         run: terraform plan
+
+# #       # Apply Terraform
+# #       - name: Terraform Apply
+# #         if: github.event_name == 'workflow_dispatch'
+# #         working-directory: environments/${{ env.environment }}
+# #         run: terraform apply -auto-approve
+
+
+
+
+########## NEW DEPLOY
+
+name: Terraform Deploy
 
 on:
   push:
-    paths:
-      - 'environments/dev/**'
-      - 'environments/staging/**'
-      - 'environments/prod/**'
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: "Environment to deploy"
-        required: true
-        type: choice
-        default: dev
-        options:
-          - dev
-          - staging
-          - prod
+    branches: 
+      - main
+      - staging
+      - dev
 
 jobs:
-  terraform:
+  deploy:
     runs-on: ubuntu-latest
 
     env:
       AWS_REGION: us-east-1
       TF_IN_AUTOMATION: true
-      ENV_NAME: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || (github.event_name == 'push' && github.ref_name == 'main' && github.event.head_commit.message) }}
+      # TF_PLUGIN_CACHE_DIR: ~/.terraform.d/plugin-cache
+      ENV_DIR: ${{ github.ref_name == 'main' && 'prod' || github.ref_name }}
 
     steps:
-      # Detect environment for push events
-      - name: Detect environment from changed path
-        if: github.event_name == 'push'
-        id: detect_env
-        run: |
-          ENV_CHANGED=$(git diff --name-only HEAD~1 HEAD | grep -E '^environments/(dev|staging|prod)/' | head -n1 | cut -d'/' -f2)
-          echo "environment=$ENV_CHANGED" >> $GITHUB_ENV
-          echo "Detected environment: $ENV_CHANGED"
-
-      # Set environment variable for manual trigger
-      - name: Set environment from workflow_dispatch
-        if: github.event_name == 'workflow_dispatch'
-        run: |
-          echo "environment=${{ github.event.inputs.environment }}" >> $GITHUB_ENV
-          echo "Selected environment: ${{ github.event.inputs.environment }}"
-
-      # Checkout repo
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Configure AWS credentials (from GitHub Secrets)
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -125,24 +265,26 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # Setup Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.8.5
 
-      # Init Terraform
-      - name: Terraform Init
-        working-directory: environments/${{ env.environment }}
-        run: terraform init -migrate-state
+      # - name: Cache Terraform plugins
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: ${{ env.TF_PLUGIN_CACHE_DIR }}
+      #     key: ${{ runner.os }}-terraform-${{ hashFiles('**/*.tf') }}
 
-      # Plan Terraform
+      - name: Terraform Init
+        working-directory: environments/${{ env.ENV_DIR }}
+        run: terraform init
+
       - name: Terraform Plan
-        working-directory: environments/${{ env.environment }}
+        working-directory: environments/${{ env.ENV_DIR }}
         run: terraform plan
 
-      # Apply Terraform
       - name: Terraform Apply
-        if: github.event_name == 'workflow_dispatch'
-        working-directory: environments/${{ env.environment }}
+        if: github.ref_name != 'dev'
+        working-directory: environments/${{ env.ENV_DIR }}
         run: terraform apply -auto-approve
