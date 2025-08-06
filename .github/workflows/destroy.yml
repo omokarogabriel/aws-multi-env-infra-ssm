@@ -299,6 +299,14 @@ jobs:
       #     path: ${{ env.TF_PLUGIN_CACHE_DIR }}
       #     key: ${{ runner.os }}-terraform-${{ hashFiles('**/*.tf') }}
 
+      # ✅ Create the SSH private key file for Terraform
+      - name: Write GitHub SSH key to file
+        run: |
+          mkdir -p modules/frontend
+          echo "${{ secrets.MY_GITHUB_SSH_PRIVATE_KEY }}" > modules/frontend/latest_github_key
+          chmod 600 modules/frontend/latest_github_key
+
+
       - name: Terraform Init
         working-directory: environments/${{ github.event.inputs.environment }}
         run: terraform init
@@ -306,3 +314,108 @@ jobs:
       - name: Terraform Destroy
         working-directory: environments/${{ github.event.inputs.environment }}
         run: terraform destroy -auto-approve
+
+
+##### TERRAFORM PRODUCTION READY
+
+# name: Terraform Deploy
+
+# on:
+#   push:
+#     branches:
+#       - '**'  # Trigger for any branch
+
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
+
+#     env:
+#       AWS_REGION: us-east-1
+#       TF_IN_AUTOMATION: true
+#       # Map branches to environment folders
+#       ENV_DIR: ${{ github.ref_name == 'main' && 'prod' || github.ref_name == 'staging' && 'staging' || github.ref_name == 'dev' && 'dev' || 'dev' }}
+
+#     steps:
+#       - name: Checkout repository
+#         uses: actions/checkout@v4
+
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v4
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: ${{ env.AWS_REGION }}
+
+#       - name: Setup Terraform
+#         uses: hashicorp/setup-terraform@v3
+#         with:
+#           terraform_version: 1.8.5
+
+#       - name: Terraform Init
+#         working-directory: environments/${{ env.ENV_DIR }}
+#         run: terraform init
+
+#       - name: Terraform Plan
+#         working-directory: environments/${{ env.ENV_DIR }}
+#         run: terraform plan -out=tfplan
+
+#       - name: Upload Terraform plan
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: terraform-plan
+#           path: environments/${{ env.ENV_DIR }}/tfplan
+
+#       # Auto-apply for staging
+#       - name: Terraform Apply (Staging)
+#         if: github.ref_name == 'staging'
+#         working-directory: environments/${{ env.ENV_DIR }}
+#         run: terraform apply -auto-approve tfplan
+
+#   approve-prod:
+#     needs: deploy
+#     if: github.ref_name == 'main'
+#     runs-on: ubuntu-latest
+#     environment:
+#       name: production
+#       url: https://your-prod-url.com  # optional
+#     steps:
+#       - name: Wait for approval
+#         run: echo "✅ Approved for Production Deploy"
+
+#   apply-prod:
+#     needs: approve-prod
+#     if: github.ref_name == 'main'
+#     runs-on: ubuntu-latest
+#     env:
+#       AWS_REGION: us-east-1
+#       TF_IN_AUTOMATION: true
+#       ENV_DIR: prod
+#     steps:
+#       - name: Checkout repository
+#         uses: actions/checkout@v4
+
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v4
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: ${{ env.AWS_REGION }}
+
+#       - name: Setup Terraform
+#         uses: hashicorp/setup-terraform@v3
+#         with:
+#           terraform_version: 1.8.5
+
+#       - name: Terraform Init
+#         working-directory: environments/${{ env.ENV_DIR }}
+#         run: terraform init
+
+#       - name: Download Terraform plan
+#         uses: actions/download-artifact@v4
+#         with:
+#           name: terraform-plan
+#           path: environments/${{ env.ENV_DIR }}
+
+#       - name: Terraform Apply (Production)
+#         working-directory: environments/${{ env.ENV_DIR }}
+#         run: terraform apply -auto-approve tfplan
