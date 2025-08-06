@@ -65,10 +65,17 @@ resource "aws_iam_role_policy_attachment" "attach_ssm_s3" {
 ######github private key aws secret manager
 
 resource "aws_secretsmanager_secret" "my_github_ssh_key" {
-  name        = "my-github_ssh_private_keys6"
+  name        = "my-github_ssh_private_keys9"
   description = "SSH private key for accessing GitHub repositories"
   
 }
+
+# data for an existing s3 bucket
+# data "aws_s3_bucket" "github_ssh_key_bucket" {
+#   bucket = "ansible-ssm-bucket-omokaro" # Replace with your actual S3 bucket name
+# }
+
+
 
 resource "aws_secretsmanager_secret_version" "my_github_ssh_key_version" {
   secret_id     = aws_secretsmanager_secret.my_github_ssh_key.id
