@@ -1,305 +1,14 @@
 
-# # name: Terraform
-
-# # # on:
-# # #   workflow_dispatch:
-# # #     inputs:
-# # #       environment:
-# # #         description: "Environment to deploy (dev/staging/prod)"
-# # #         required: true
-# # #         default: "dev"
-
-# # on:
-# #   workflow_dispatch:
-# #     inputs:
-# #       environment:
-# #         description: "Environment to deploy (dev,staging,prod)"
-# #         required: true
-# #         type: choice
-# #         default: dev
-# #         options:
-# #           - dev
-# #           - staging
-# #           - prod
 
 
-# # jobs:
-# #   terraform:
-# #     runs-on: ubuntu-latest
-
-# #     env:
-# #       AWS_REGION: us-east-1
-# #       TF_IN_AUTOMATION: true
-
-# #     steps:
-# #       # Checkout repo
-# #       - name: Checkout
-# #         uses: actions/checkout@v4
-
-# #       # Configure AWS credentials (from GitHub Secrets)
-# #       - name: Configure AWS credentials
-# #         uses: aws-actions/configure-aws-credentials@v4
-# #         with:
-# #           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-# #           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-# #           aws-region: ${{ env.AWS_REGION }}
-
-# #       # Setup Terraform
-# #       - name: Setup Terraform
-# #         uses: hashicorp/setup-terraform@v3
-# #         with:
-# #           terraform_version: 1.8.5
-
-# #       # Init Terraform
-# #       - name: Terraform Init
-# #         working-directory: environments/${{ github.event.inputs.environment }}
-# #         run: terraform init -migrate-state
-
-# #       # Plan Terraform
-# #       - name: Terraform Plan
-# #         working-directory: environments/${{ github.event.inputs.environment }}
-# #         run: terraform plan
-
-# #       # Apply Terraform (only on manual approval)
-# #       - name: Terraform Apply
-# #         if: github.event_name == 'workflow_dispatch'
-# #         working-directory: environments/${{ github.event.inputs.environment }}
-# #         run: terraform apply -auto-approve
-
-
-
-
-
-# name: Terraform
-
-# on:
-#   workflow_dispatch:
-#     inputs:
-#       environment:
-#         description: "Environment to deploy (dev, staging, prod)"
-#         required: true
-#         type: choice
-#         default: dev
-#         options:
-#           - dev
-#           - staging
-#           - prod
-#       auto_apply:
-#         description: "Apply changes?"
-#         required: true
-#         type: choice
-#         default: "false"
-#         options:
-#           - "true"
-#           - "false"
-
-# jobs:
-#   terraform:
-#     runs-on: ubuntu-latest
-
-#     env:
-#       AWS_REGION: us-east-1
-#       TF_IN_AUTOMATION: true
-#       TF_PLUGIN_CACHE_DIR: ~/.terraform.d/plugin-cache
-
-#     steps:
-#       # Checkout repository
-#       - name: Checkout
-#         uses: actions/checkout@v4
-
-#       # Configure AWS credentials from GitHub Secrets
-#       - name: Configure AWS credentials
-#         uses: aws-actions/configure-aws-credentials@v4
-#         with:
-#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-#           aws-region: ${{ env.AWS_REGION }}
-
-#       # Setup Terraform
-#       - name: Setup Terraform
-#         uses: hashicorp/setup-terraform@v3
-#         with:
-#           terraform_version: 1.8.5
-
-#       # Cache Terraform plugins for faster runs
-#       - name: Cache Terraform plugins
-#         uses: actions/cache@v4
-#         with:
-#           path: ${{ env.TF_PLUGIN_CACHE_DIR }}
-#           key: ${{ runner.os }}-terraform-${{ hashFiles('**/*.tf') }}
-
-#       # Initialize Terraform
-#       - name: Terraform Init
-#         working-directory: environments/${{ github.event.inputs.environment }}
-#         run: terraform init
-
-#       # Terraform Plan
-#       - name: Terraform Plan
-#         working-directory: environments/${{ github.event.inputs.environment }}
-#         run: terraform plan
-
-#       # Terraform Apply (only if auto_apply is set to true)
-#       - name: Terraform Apply
-#         if: ${{ github.event.inputs.auto_apply == 'true' }}
-#         working-directory: environments/${{ github.event.inputs.environment }}
-#         run: terraform apply -auto-approve
-
-
-
-
-
-
-
-# # name: Terraform
-
-# # on:
-# #   push:
-# #     paths:
-# #       - 'environments/dev/**'
-# #       - 'environments/staging/**'
-# #       - 'environments/prod/**'
-# #   workflow_dispatch:
-# #     inputs:
-# #       environment:
-# #         description: "Environment to deploy"
-# #         required: true
-# #         type: choice
-# #         default: dev
-# #         options:
-# #           - dev
-# #           - staging
-# #           - prod
-
-# # jobs:
-# #   terraform:
-# #     runs-on: ubuntu-latest
-
-# #     env:
-# #       AWS_REGION: us-east-1
-# #       TF_IN_AUTOMATION: true
-# #       ENV_NAME: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || (github.event_name == 'push' && github.ref_name == 'main' && github.event.head_commit.message) }}
-
-# #     steps:
-# #       # Detect environment for push events
-# #       - name: Detect environment from changed path
-# #         if: github.event_name == 'push'
-# #         id: detect_env
-# #         run: |
-# #           ENV_CHANGED=$(git diff --name-only HEAD~1 HEAD | grep -E '^environments/(dev|staging|prod)/' | head -n1 | cut -d'/' -f2)
-# #           echo "environment=$ENV_CHANGED" >> $GITHUB_ENV
-# #           echo "Detected environment: $ENV_CHANGED"
-
-# #       # Set environment variable for manual trigger
-# #       - name: Set environment from workflow_dispatch
-# #         if: github.event_name == 'workflow_dispatch'
-# #         run: |
-# #           echo "environment=${{ github.event.inputs.environment }}" >> $GITHUB_ENV
-# #           echo "Selected environment: ${{ github.event.inputs.environment }}"
-
-# #       # Checkout repo
-# #       - name: Checkout
-# #         uses: actions/checkout@v4
-
-# #       # Configure AWS credentials (from GitHub Secrets)
-# #       - name: Configure AWS credentials
-# #         uses: aws-actions/configure-aws-credentials@v4
-# #         with:
-# #           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-# #           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-# #           aws-region: ${{ env.AWS_REGION }}
-
-# #       # Setup Terraform
-# #       - name: Setup Terraform
-# #         uses: hashicorp/setup-terraform@v3
-# #         with:
-# #           terraform_version: 1.8.5
-
-# #       # Init Terraform
-# #       - name: Terraform Init
-# #         working-directory: environments/${{ env.environment }}
-# #         run: terraform init -migrate-state
-
-# #       # Plan Terraform
-# #       - name: Terraform Plan
-# #         working-directory: environments/${{ env.environment }}
-# #         run: terraform plan
-
-# #       # Apply Terraform
-# #       - name: Terraform Apply
-# #         if: github.event_name == 'workflow_dispatch'
-# #         working-directory: environments/${{ env.environment }}
-# #         run: terraform apply -auto-approve
-
-
-
-
-########## NEW DEPLOY
-
-# name: Terraform Deploy
-
-# on:
-#   push:
-#     branches: 
-#       - main
-#       - staging
-#       - dev
-
-# jobs:
-#   deploy:
-#     runs-on: ubuntu-latest
-
-#     env:
-#       AWS_REGION: us-east-1
-#       TF_IN_AUTOMATION: true
-#       # TF_PLUGIN_CACHE_DIR: ~/.terraform.d/plugin-cache
-#       ENV_DIR: ${{ github.ref_name == 'main' && 'prod' || github.ref_name }}
-
-#     steps:
-#       - name: Checkout repository
-#         uses: actions/checkout@v4
-
-#       - name: Configure AWS credentials
-#         uses: aws-actions/configure-aws-credentials@v4
-#         with:
-#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-#           aws-region: ${{ env.AWS_REGION }}
-
-#       - name: Setup Terraform
-#         uses: hashicorp/setup-terraform@v3
-#         with:
-#           terraform_version: 1.8.5
-
-#       # - name: Cache Terraform plugins
-#       #   uses: actions/cache@v4
-#       #   with:
-#       #     path: ${{ env.TF_PLUGIN_CACHE_DIR }}
-#       #     key: ${{ runner.os }}-terraform-${{ hashFiles('**/*.tf') }}
-
-#       - name: Terraform Init
-#         working-directory: environments/${{ env.ENV_DIR }}
-#         run: terraform init
-
-#       - name: Terraform Plan
-#         working-directory: environments/${{ env.ENV_DIR }}
-#         run: terraform plan
-
-#       - name: Terraform Apply
-#         if: github.ref_name != 'dev'
-#         working-directory: environments/${{ env.ENV_DIR }}
-#         run: terraform apply -auto-approve
-
-
-
-
-###### 2 NEW DEPLOY
+###### 1 NEW DEPLOY
 
 name: Terraform Deploy
 
 on:
   push:
     branches:
-      - '**'  # Trigger for any branch
+      - '**'  # Trigger for any branch   
 
 jobs:
   deploy:
@@ -308,6 +17,8 @@ jobs:
     env:
       AWS_REGION: us-east-1
       TF_IN_AUTOMATION: true
+      OWNER: omokarogabriel
+      ANSIBLE_REPO: aws-multi-env-infra-ssm-ansible
       # Map branches to environment folders
       ENV_DIR: ${{ github.ref_name == 'main' && 'prod' || github.ref_name == 'staging' && 'staging' || github.ref_name == 'dev' && 'dev' || 'dev' }}
 
@@ -351,11 +62,17 @@ jobs:
         run: terraform apply -auto-approve
 
 
+      - name: Trigger Ansible workflow in another repo
+        if: success()
+        run: |
+          curl -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: token ${{ secrets.PERSONAL_ACCESS_TOKEN }}" \
+            https://api.github.com/repos/${{ env.OWNER }}/aws-multi-env-infra-ssm-ansible/dispatches \
+            -d "{\"event_type\": \"run-ansible\", \"client_payload\": {\"env_name\": \"${{ github.ref_name == 'main' && 'prod' || github.ref_name }}\"}}"
 
 
-
-
-
+##### 2 NEW DEPLOY
 
 
 # name: Terraform Deploy
@@ -363,7 +80,7 @@ jobs:
 # on:
 #   push:
 #     branches:
-#       - '**'  # Trigger for any branch
+#       - '**'  # Trigger on any branch
 
 # jobs:
 #   deploy:
@@ -391,6 +108,13 @@ jobs:
 #         with:
 #           terraform_version: 1.8.5
 
+#       # ✅ Create the SSH private key file for Terraform
+#       - name: Write GitHub SSH key to file
+#         run: |
+#           mkdir -p modules/frontend
+#           echo "${{ secrets.MY_GITHUB_SSH_PRIVATE_KEY }}" > modules/frontend/latest_github_key
+#           chmod 600 modules/frontend/latest_github_key
+
 #       - name: Terraform Init
 #         working-directory: environments/${{ env.ENV_DIR }}
 #         run: terraform init
@@ -399,20 +123,17 @@ jobs:
 #         working-directory: environments/${{ env.ENV_DIR }}
 #         run: terraform plan
 
-#       # Apply for staging only (automatic)
+#       # Apply for staging automatically
 #       - name: Terraform Apply (Staging)
 #         if: github.ref_name == 'staging'
 #         working-directory: environments/${{ env.ENV_DIR }}
 #         run: terraform apply -auto-approve
 
 #   approve-prod:
-#     # This job waits for human approval before running
 #     needs: deploy
 #     if: github.ref_name == 'main'
 #     runs-on: ubuntu-latest
-#     environment:
-#       name: production
-#       url: https://your-prod-url.com  # optional, for GitHub Environments
+#     # environment: production
 #     steps:
 #       - name: Wait for approval
 #         run: echo "✅ Approved for Production Deploy"
@@ -441,6 +162,13 @@ jobs:
 #         with:
 #           terraform_version: 1.8.5
 
+#       # ✅ Create the SSH private key file for Terraform
+#       - name: Write GitHub SSH key to file
+#         run: |
+#           mkdir -p modules/frontend
+#           echo "${{ secrets.MY_GITHUB_SSH_PRIVATE_KEY }}" > modules/frontend/latest_github_key
+#           chmod 600 modules/frontend/latest_github_key
+
 #       - name: Terraform Init
 #         working-directory: environments/${{ env.ENV_DIR }}
 #         run: terraform init
@@ -448,3 +176,4 @@ jobs:
 #       - name: Terraform Apply (Production)
 #         working-directory: environments/${{ env.ENV_DIR }}
 #         run: terraform apply -auto-approve
+
