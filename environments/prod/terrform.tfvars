@@ -1,13 +1,13 @@
 public_subnet_cidrs  = ["10.0.1.0/24", "10.0.2.0/24"]
 private_subnet_cidrs = ["10.0.5.0/24", "10.0.6.0/24"]
 vpc_cidr = "10.0.0.0/16"
-vpc_name = "dev-vpc"
-env = "dev"
+vpc_name = "prod-vpc"
+env = "prod"
 ami_id = "ami-0fc5d935ebf8bc3bc"
-project = "gabriel-dev"
+project = "gabriel-prod"
 aws_region = "us-east-1"
 # instance_profile_name = "aws_iam_instance_profile.ssm_profile.name"
 instance_type = "t2.micro"
 user_data_path = "../../modules/frontend/scripts/user_data.sh"
-asg_name = "frontend-dev"
+asg_name = "frontend-prod"
 # dynamodb_table_name = "dev-terraform-locks"
